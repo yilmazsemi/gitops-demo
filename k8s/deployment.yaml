@@ -12,7 +12,7 @@ spec:
       app: gitops-demo
   template:
     metadata:
-  namespace: default
+      namespace: default
       labels:
         app: gitops-demo
     spec:
