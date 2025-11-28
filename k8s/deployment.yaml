@@ -1,6 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  namespace: default
   name: gitops-demo-deployment
   labels:
     app: gitops-demo
@@ -11,6 +12,7 @@ spec:
       app: gitops-demo
   template:
     metadata:
+  namespace: default
       labels:
         app: gitops-demo
     spec:
