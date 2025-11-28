@@ -17,7 +17,9 @@ spec:
     spec:
       containers:
       - name: gitops-demo
-        image: yilmazsemi/gitops-demo:v1.0.0
+        image: yilmazsemi/gitops-demo:latest       # ❌ intentional vulnerability
+        securityContext:
+          runAsUser: 0                             # ❌ root user (vulnerability)
         ports:
         - containerPort: 3000
         resources:
