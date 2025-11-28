@@ -17,9 +17,7 @@ spec:
     spec:
       containers:
       - name: gitops-demo
-        image: yilmazsemi/gitops-demo:latest       # ❌ intentional vulnerability
-        securityContext:
-          runAsUser: 0                             # ❌ root user (vulnerability)
+        image: yilmazsemi/gitops-demo:does-not-exist   # burası bozulan kısım: var olmayan image tag'i ile intentional failure eklendi
         ports:
         - containerPort: 3000
         resources:
@@ -28,4 +26,3 @@ spec:
             cpu: "250m"
           limits:
             memory: "256Mi"
-            cpu: "500m"
