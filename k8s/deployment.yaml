@@ -12,17 +12,19 @@ spec:
       app: gitops-demo
   template:
     metadata:
+  namespace: default
       labels:
         app: gitops-demo
     spec:
       containers:
-      - name: gitops-demo
-        image: yilmazsemi/gitops-demo:does-not-exist   # burası bozulan kısım: var olmayan image tag'i ile intentional failure eklendi
-        ports:
-        - containerPort: 3000
-        resources:
-          requests:
-            memory: "128Mi"
-            cpu: "250m"
-          limits:
-            memory: "256Mi"
+        - name: gitops-demo
+          image: yilmazsemi/gitops-demo:v1.0.0
+          ports:
+            - containerPort: 3000
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "250m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
