@@ -1,35 +1,30 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: apps/v1  # Deployment kaynağının API sürümü
+kind: Deployment  # Bu kaynağın türü: Deployment
 metadata:
-  namespace: default
-  name: gitops-demo-deployment
+  namespace: default  # Deployment'ın oluşturulacağı namespace
+  name: gitops-demo-deployment  # Deployment'a verilen isim
   labels:
-    app: gitops-demo
+    app: gitops-demo  # Deployment ve pod'ları etiketlemek için label
 spec:
-  replicas: 3
+  replicas: 3  # Oluşturulacak pod sayısı
   selector:
     matchLabels:
-      app: gitops-demo
+      app: gitops-demo  # Hangi pod'ların bu Deployment'a ait olduğunu belirlemek için selector
   template:
     metadata:
-      namespace: default
+      namespace: default  # Pod template için namespace (Deployment ile aynı)
       labels:
-        app: gitops-demo
+        app: gitops-demo  # Pod'lara atanacak label
     spec:
       containers:
-        - name: gitops-demo
-          image: yilmazsemi/gitops-demo:v1.0.0
+        - name: gitops-demo  # Container ismi
+          image: yilmazsemi/gitops-demo:v1.0.0  # Container’da çalışacak Docker imajı
           ports:
-            - containerPort: 3000
+            - containerPort: 3000  # Container’ın açacağı port
           resources:
-            requests:
-              memory: "128Mi"
-              cpu: "250m"
-            limits:
-              memory: "256Mi"
-              cpu: "500m"
-          securityContext:
-            runAsUser: 1000
-            runAsGroup: 1000
-            allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
+            requests:  # Container için minimum kaynak talepleri
+              memory: "128Mi"  # Minimum bellek miktarı
+              cpu: "250m"  # Minimum CPU miktarı (millicores)
+            limits:  # Container için maksimum kaynak sınırları
+              memory: "256Mi"  # Maksimum bellek miktarı
+              cpu: "500m"  # Maksimum CPU miktarı

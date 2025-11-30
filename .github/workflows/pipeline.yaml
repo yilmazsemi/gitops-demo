@@ -1,64 +1,64 @@
-name: GitOps Demo Pipeline
+name: GitOps Demo Pipeline  # Pipeline’ın adı
 
 on:
-  push:
+  push:  # Hangi olaylarda pipeline tetiklenecek
     branches:
-      - main
+      - main  # main branch’e push yapıldığında çalışacak
     tags:
-      - 'v*'
+      - 'v*'  # v ile başlayan versiyon tag’leri oluşturulduğunda çalışacak
 
 jobs:
-  security-scan:
-    name: Security Scan
-    runs-on: ubuntu-latest
+  security-scan:  # İlk iş: Güvenlik taraması
+    name: Security Scan  # Job adı
+    runs-on: ubuntu-latest  # Bu job’ın çalışacağı ortam
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+      - name: Checkout Code  # Kodun çekilmesi
+        uses: actions/checkout@v3  # GitHub Actions checkout action’ı
 
-      - name: Run npm install
+      - name: Run npm install  # Bağımlılıkların yüklenmesi
         run: npm install
+        working-directory: ./app  # Uygulamanın bulunduğu dizin
+
+      - name: Run npm audit  # Güvenlik taraması
+        run: npm audit --audit-level=high  # Yüksek seviyede güvenlik açıklarını kontrol et
         working-directory: ./app
 
-      - name: Run npm audit
-        run: npm audit --audit-level=high
-        working-directory: ./app
-
-  build-and-test:
+  build-and-test:  # İkinci iş: Build ve Test
     name: Build & Test
     runs-on: ubuntu-latest
-    needs: security-scan
+    needs: security-scan  # Bu job security-scan tamamlandıktan sonra çalışacak
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v3  # Kodun tekrar çekilmesi
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v3  # Node.js ortamının kurulması
         with:
-          node-version: 18
+          node-version: 18  # Node.js versiyonu
 
       - name: Install Dependencies
         run: npm install
-        working-directory: ./app
+        working-directory: ./app  # Uygulama dizininde bağımlılıkları yükle
 
       - name: Run Tests
-        run: npm test
+        run: npm test  # Testlerin çalıştırılması
         working-directory: ./app
 
-  docker-build-push:
+  docker-build-push:  # Üçüncü iş: Docker image build ve push
     name: Docker Build & Push
     runs-on: ubuntu-latest
-    needs: build-and-test
+    needs: build-and-test  # build-and-test tamamlandıktan sonra çalışacak
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v3  # Kodun tekrar çekilmesi
 
       - name: Log in to DockerHub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v2  # DockerHub’a giriş
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          username: ${{ secrets.DOCKER_USERNAME }}  # GitHub Secrets üzerinden DockerHub kullanıcı adı
+          password: ${{ secrets.DOCKER_PASSWORD }}  # GitHub Secrets üzerinden DockerHub şifresi
 
       - name: Build and Push Docker Image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/gitops-demo:latest ./app
-          docker push ${{ secrets.DOCKER_USERNAME }}/gitops-demo:latest
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/gitops-demo:latest ./app  # Docker image build et
+          docker push ${{ secrets.DOCKER_USERNAME }}/gitops-demo:latest  # Image’ı DockerHub’a push et

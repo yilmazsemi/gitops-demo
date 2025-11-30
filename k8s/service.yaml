@@ -1,13 +1,13 @@
-apiVersion: v1
-kind: Service
+apiVersion: v1  # Kubernetes API sürümü, Service kaynakları için v1 kullanılır
+kind: Service  # Kaynak türü, burada Service
 metadata:
-  namespace: default
-  name: gitops-demo-service
+  namespace: default  # Service’in hangi namespace’de oluşturulacağı
+  name: gitops-demo-service  # Service’in ismi
 spec:
-  type: LoadBalancer
+  type: LoadBalancer  # Service türü, LoadBalancer bulutta bir dış IP sağlar ve trafiği pod’lara yönlendirir
   selector:
-    app: gitops-demo
+    app: gitops-demo  # Hangi pod’lara trafik yönlendirilecek, Deployment’daki pod etiketleri ile eşleşir
   ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 3000
+    - protocol: TCP  # Kullanılacak protokol (TCP)
+      port: 80  # Service’in dinlediği port (dışarıdan gelen trafik bu porttan gelir)
+      targetPort: 3000  # Pod içerisindeki container’ın dinlediği port
