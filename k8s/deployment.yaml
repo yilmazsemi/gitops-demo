@@ -1,30 +1,54 @@
-apiVersion: apps/v1  # Deployment kaynağının API sürümü
-kind: Deployment  # Bu kaynağın türü: Deployment
+apiVersion: apps/v1  # Deployment API sürümü
+kind: Deployment  # Kaynak türü
 metadata:
-  namespace: default  # Deployment'ın oluşturulacağı namespace
-  name: gitops-demo-deployment  # Deployment'a verilen isim
+  namespace: default  # Deployment'ın namespace'i
+  name: gitops-demo-deployment  # Deployment adı
   labels:
-    app: gitops-demo  # Deployment ve pod'ları etiketlemek için label
+    app: gitops-demo  # Deployment label
 spec:
-  replicas: 3  # Oluşturulacak pod sayısı
+  replicas: 3  # Pod sayısı
   selector:
     matchLabels:
-      app: gitops-demo  # Hangi pod'ların bu Deployment'a ait olduğunu belirlemek için selector
+      app: gitops-demo  # Hangi pod'lara ait olduğunu belirler
   template:
     metadata:
-      namespace: default  # Pod template için namespace (Deployment ile aynı)
+      namespace: default  # Pod template için namespace
       labels:
-        app: gitops-demo  # Pod'lara atanacak label
+        app: gitops-demo  # Pod label'ı
     spec:
       containers:
-        - name: gitops-demo  # Container ismi
-          image: yilmazsemi/gitops-demo:v1.0.0  # Container’da çalışacak Docker imajı
+        - name: gitops-demo  # Container adı
+
+          # ❌ 1) latest + yanlış tag → intentionally broken image
+          # Bu image mevcut değil, kube pod'u başlatamaz → ImagePullBackOff → ArgoCD Degraded
+          image: yilmazsemi/gitops-demo:broken-latest
+
+          # ❌ 2) root user → major security vulnerability
+          # Container root olarak çalıştığında saldırgan host üzerinde daha fazla yetki elde edebilir
+          securityContext:
+            runAsUser: 0  # Root user (bilerek açılan güvenlik açığı)
+
+            # ❌ 3) allowPrivilegeEscalation → container privilege yükseltebilir
+            # Normalde false olmalıdır; true olması ciddi risk oluşturur
+            allowPrivilegeEscalation: true
+
+            # ❌ 4) Writable filesystem → container içinde yazılabilir alan bırakır
+            # readOnlyRootFilesystem true olmalıydı
+            readOnlyRootFilesystem: false
+
+            # ❌ 5) SYS_ADMIN capability → container'ı neredeyse host yetkisine getirir
+            # En tehlikeli Linux yetkilerinden biridir
+            capabilities:
+              add:
+                - SYS_ADMIN
+
           ports:
-            - containerPort: 3000  # Container’ın açacağı port
+            - containerPort: 3000  # Container portu
+
           resources:
-            requests:  # Container için minimum kaynak talepleri
-              memory: "128Mi"  # Minimum bellek miktarı
-              cpu: "250m"  # Minimum CPU miktarı (millicores)
-            limits:  # Container için maksimum kaynak sınırları
-              memory: "256Mi"  # Maksimum bellek miktarı
-              cpu: "500m"  # Maksimum CPU miktarı
+            requests:  # Minimum kaynak talepleri
+              memory: "128Mi"
+              cpu: "250m"
+            limits:  # Maksimum kaynak limitleri
+              memory: "256Mi"
+              cpu: "500m"
