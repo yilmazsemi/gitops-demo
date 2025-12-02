@@ -1,70 +1,30 @@
-apiVersion: apps/v1  # Deployment API sürümü
-kind: Deployment  # Kaynak türü
+apiVersion: apps/v1  # Deployment kaynağının API sürümü
+kind: Deployment  # Bu kaynağın türü: Deployment
 metadata:
-  namespace: default  # Deployment'ın namespace'i
-  name: gitops-demo-deployment  # Deployment adı
+  namespace: default  # Deployment'ın oluşturulacağı namespace
+  name: gitops-demo-deployment  # Deployment'a verilen isim
   labels:
-    app: gitops-demo  # Deployment label
+    app: gitops-demo  # Deployment ve pod'ları etiketlemek için label
 spec:
-  replicas: 3  # Pod sayısı
+  replicas: 3  # Oluşturulacak pod sayısı
   selector:
     matchLabels:
-      app: gitops-demo  # Hangi pod'lara ait olduğunu belirler
-
-  # ❌ 6) LABEL MISMATCH → Pod'lar bu Deployment tarafından yönetilemez
-  # Deployment app=gitops-demo arıyor ama pod template app=gitops-demo-broken
-  # ReplicaSet pod bulamayacağı için ArgoCD Health DEGRADE olur
+      app: gitops-demo  # Hangi pod'ların bu Deployment'a ait olduğunu belirlemek için selector
   template:
     metadata:
-      namespace: default
+      namespace: default  # Pod template için namespace (Deployment ile aynı)
       labels:
-        app: gitops-demo-broken  # intentionally broken label (normalde gitops-demo olmalı)
-
+        app: gitops-demo  # Pod'lara atanacak label
     spec:
       containers:
-        - name: gitops-demo  # Container adı
-
-          # ❌ 1) Broken image → intentionally wrong tag
-          # Bu image mevcut değil → ImagePullBackOff → pod'lar başlatılamaz
-          image: yilmazsemi/gitops-demo:broken-latest
-
-          # ❌ 2) Root user → ciddi güvenlik açığı
-          securityContext:
-            runAsUser: 0  # root olarak çalıştırmak büyük risk
-
-            # ❌ 3) Privilege escalation → host üzerinde daha fazla yetki alınabilir
-            allowPrivilegeEscalation: true
-
-            # ❌ 4) Dosya sistemi yazılabilir → saldırgan içeride dosya manipüle edebilir
-            readOnlyRootFilesystem: false
-
-            # ❌ 5) SYS_ADMIN capability → container neredeyse host-level yetki alır
-            capabilities:
-              add:
-                - SYS_ADMIN
-
+        - name: gitops-demo  # Container ismi
+          image: yilmazsemi/gitops-demo:v1.0.0  # Container’da çalışacak Docker imajı
           ports:
-            - containerPort: 3000  # Container portu
-
-          # ❌ 7) Sensitive plaintext secrets → büyük güvenlik riski
-          env:
-            - name: SECRET_KEY
-              value: "123456"  # normalde secret olarak tutulmalı
-
-          # ❌ 8) Broken readiness probe → Pod hiçbir zaman ready olmaz
-          # ArgoCD Health: Degraded olur
-          readinessProbe:
-            httpGet:
-              path: /healthz
-              port: 9999  # intentionally wrong port
-            initialDelaySeconds: 3
-            periodSeconds: 5
-
-          # ❌ 9) Absürt kaynak değerleri → pod schedule edilemeyebilir
+            - containerPort: 3000  # Container’ın açacağı port
           resources:
-            requests:
-              memory: "1Mi"   # aşırı düşük → scheduler reddedebilir
-              cpu: "1m"
-            limits:
-              memory: "10Gi"  # aşırı yüksek → node kaldırmaz
-              cpu: "8"        # çoğu cluster için çok yüksek
+            requests:  # Container için minimum kaynak talepleri
+              memory: "128Mi"  # Minimum bellek miktarı
+              cpu: "250m"  # Minimum CPU miktarı (millicores)
+            limits:  # Container için maksimum kaynak sınırları
+              memory: "256Mi"  # Maksimum bellek miktarı
+              cpu: "500m"  # Maksimum CPU miktarı
