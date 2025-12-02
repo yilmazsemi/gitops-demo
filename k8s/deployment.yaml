@@ -10,34 +10,35 @@ spec:
   selector:
     matchLabels:
       app: gitops-demo  # Hangi pod'lara ait olduğunu belirler
+
+  # ❌ 6) LABEL MISMATCH → Pod'lar bu Deployment tarafından yönetilemez
+  # Deployment app=gitops-demo arıyor ama pod template app=gitops-demo-broken
+  # ReplicaSet pod bulamayacağı için ArgoCD Health DEGRADE olur
   template:
     metadata:
-      namespace: default  # Pod template için namespace
+      namespace: default
       labels:
-        app: gitops-demo  # Pod label'ı
+        app: gitops-demo-broken  # intentionally broken label (normalde gitops-demo olmalı)
+
     spec:
       containers:
         - name: gitops-demo  # Container adı
 
-          # ❌ 1) latest + yanlış tag → intentionally broken image
-          # Bu image mevcut değil, kube pod'u başlatamaz → ImagePullBackOff → ArgoCD Degraded
+          # ❌ 1) Broken image → intentionally wrong tag
+          # Bu image mevcut değil → ImagePullBackOff → pod'lar başlatılamaz
           image: yilmazsemi/gitops-demo:broken-latest
 
-          # ❌ 2) root user → major security vulnerability
-          # Container root olarak çalıştığında saldırgan host üzerinde daha fazla yetki elde edebilir
+          # ❌ 2) Root user → ciddi güvenlik açığı
           securityContext:
-            runAsUser: 0  # Root user (bilerek açılan güvenlik açığı)
+            runAsUser: 0  # root olarak çalıştırmak büyük risk
 
-            # ❌ 3) allowPrivilegeEscalation → container privilege yükseltebilir
-            # Normalde false olmalıdır; true olması ciddi risk oluşturur
+            # ❌ 3) Privilege escalation → host üzerinde daha fazla yetki alınabilir
             allowPrivilegeEscalation: true
 
-            # ❌ 4) Writable filesystem → container içinde yazılabilir alan bırakır
-            # readOnlyRootFilesystem true olmalıydı
+            # ❌ 4) Dosya sistemi yazılabilir → saldırgan içeride dosya manipüle edebilir
             readOnlyRootFilesystem: false
 
-            # ❌ 5) SYS_ADMIN capability → container'ı neredeyse host yetkisine getirir
-            # En tehlikeli Linux yetkilerinden biridir
+            # ❌ 5) SYS_ADMIN capability → container neredeyse host-level yetki alır
             capabilities:
               add:
                 - SYS_ADMIN
@@ -45,10 +46,25 @@ spec:
           ports:
             - containerPort: 3000  # Container portu
 
+          # ❌ 7) Sensitive plaintext secrets → büyük güvenlik riski
+          env:
+            - name: SECRET_KEY
+              value: "123456"  # normalde secret olarak tutulmalı
+
+          # ❌ 8) Broken readiness probe → Pod hiçbir zaman ready olmaz
+          # ArgoCD Health: Degraded olur
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 9999  # intentionally wrong port
+            initialDelaySeconds: 3
+            periodSeconds: 5
+
+          # ❌ 9) Absürt kaynak değerleri → pod schedule edilemeyebilir
           resources:
-            requests:  # Minimum kaynak talepleri
-              memory: "128Mi"
-              cpu: "250m"
-            limits:  # Maksimum kaynak limitleri
-              memory: "256Mi"
-              cpu: "500m"
+            requests:
+              memory: "1Mi"   # aşırı düşük → scheduler reddedebilir
+              cpu: "1m"
+            limits:
+              memory: "10Gi"  # aşırı yüksek → node kaldırmaz
+              cpu: "8"        # çoğu cluster için çok yüksek
