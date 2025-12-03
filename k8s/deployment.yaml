@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: gitops-demo  # Container ismi
-          image: yilmazsemi/gitops-demo:v1.1.1  # Container’da çalışacak Docker imajı, ✅ güncel versiyon eklendi (önce v1.1.0 idi)
+          image: yilmazsemi/gitops-demo:v8.8.8  # Container’da çalışacak Docker imajı, ✅ güncel versiyon eklendi (önce v1.1.1 idi)
           ports:
             - containerPort: 3000  # Container’ın açacağı port
           resources:
