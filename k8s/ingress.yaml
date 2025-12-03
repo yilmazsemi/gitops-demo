@@ -14,6 +14,6 @@ spec:
         pathType: Prefix             # Path eşleştirme tipi: Prefix, path ile başlayan tüm URL'ler eşleşir
         backend:                     # Trafiğin yönlendirileceği backend servis
           service:
-            name: gitops-demo-deployment   # Hedef servis adı (Deployment için oluşturulan Service)
+            name: gitops-demo-service   # Hedef servis adı.
             port:
               number: 80                  # Servisin portu, trafiğin buraya yönlendirileceğini belirtir
