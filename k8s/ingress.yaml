@@ -7,7 +7,7 @@ metadata:
     nginx.ingress.kubernetes.io/rewrite-target: /   # Nginx Ingress controller'a, path'i backend servise / olarak rewrite etmesini söyler
 spec:
   rules:                             # Trafik yönlendirme kuralları burada tanımlanır
-  - host: gitops-demo.local          # Bu host adına gelen istekler için kurallar geçerli olur
+  - host: gitops-demo-service          # Bu host adına gelen istekler için kurallar geçerli olur
     http:
       paths:                         # HTTP path bazlı yönlendirmeler
       - path: /                      # Bu path ile başlayan tüm istekler
