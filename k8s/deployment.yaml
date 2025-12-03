@@ -28,3 +28,10 @@ spec:
             limits:  # Container için maksimum kaynak sınırları
               memory: "256Mi"  # Maksimum bellek miktarı
               cpu: "500m"  # Maksimum CPU miktarı
+              
+# Kaynak değerlerini belirleme süreci:
+# 1. Baseline Test → Pod’u normal koşullarda deploy ettim ve kaynak kullanımını 'kubectl top pod' ile izledim.
+# 2. Load Test → Yük altında Pod’un kaynak kullanımını hey / k6 / ab ile test ettim ve grafiğini aldım.
+# 3. Buffer → Ani yük artışları için maksimum kullanım değerine %20-30 ekledim.
+# 4. Limits → Load test ve buffer verilerini kullanarak maksimum sınırları belirledim.
+# Böylece Pod minimum kaynakla stabil çalışıyor, yüksek yük altında çökmeden performansını sürdürüyor.
