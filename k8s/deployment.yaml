@@ -1,37 +1,38 @@
-apiVersion: apps/v1  # Deployment kaynağının API sürümü
-kind: Deployment  # Bu kaynağın türü: Deployment
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  namespace: default  # Deployment'ın oluşturulacağı namespace
-  name: gitops-demo-deployment  # Deployment'a verilen isim
+  namespace: default
+  name: gitops-demo-deployment
   labels:
-    app: gitops-demo  # Deployment ve pod'ları etiketlemek için label
+    app: gitops-demo
 spec:
-  replicas: 3  # Oluşturulacak pod sayısı
+  replicas: 3
+
+  # Selector hala "app: gitops-demo"
   selector:
     matchLabels:
-      app: gitops-demo  # Hangi pod'ların bu Deployment'a ait olduğunu belirlemek için selector
+      app: gitops-demo
+
   template:
     metadata:
-      namespace: default  # Pod template için namespace (Deployment ile aynı)
+      namespace: default
       labels:
-        app: gitops-demo  # Pod'lara atanacak label
+        app: gitops-demo-broken   #  LABEL MISMATCH → ArgoCD SYNC ERROR
+
     spec:
       containers:
-        - name: gitops-demo  # Container ismi
-          image: yilmazsemi/gitops-demo:v8.8.8  # Container’da çalışacak Docker imajı,  güncel versiyon eklendi (önce v1.1.1 idi)
+        - name: gitops-demo
+
+          #  BROKEN IMAGE → Pod ImagePullBackOff (eğer sync mümkün olsaydı)
+          image: yilmazsemi/gitops-demo:broken-latest
+
           ports:
-            - containerPort: 3000  # Container’ın açacağı port
+            - containerPort: 3000
+
           resources:
-            requests:  # Container için minimum kaynak talepleri
-              memory: "128Mi"  # Minimum bellek miktarı
-              cpu: "250m"  # Minimum CPU miktarı (millicores)
-            limits:  # Container için maksimum kaynak sınırları
-              memory: "256Mi"  # Maksimum bellek miktarı
-              cpu: "500m"  # Maksimum CPU miktarı
-              
-# Kaynak değerlerini belirleme süreci:
-# 1. Baseline Test → Pod’u normal koşullarda deploy ettim ve kaynak kullanımını 'kubectl top pod' ile izledim.
-# 2. Load Test → Yük altında Pod’un kaynak kullanımını hey / k6 / ab ile test ettim ve grafiğini aldım.
-# 3. Buffer → Ani yük artışları için maksimum kullanım değerine %20-30 ekledim.
-# 4. Limits → Load test ve buffer verilerini kullanarak maksimum sınırları belirledim.
-# Böylece Pod minimum kaynakla stabil çalışıyor, yüksek yük altında çökmeden performansını sürdürüyor.
+            requests:
+              memory: "128Mi"
+              cpu: "250m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
